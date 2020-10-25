@@ -1,3 +1,11 @@
+/**
+ * @ Author: tekky
+ * @ Create Time: 2020-10-26 05:45:39
+ * @ Modified by: tekky
+ * @ Modified time: 2020-10-26 07:48:40
+ * @ Description: datastructure of a merkle tree.
+ */
+
 package merkletree
 
 import (
@@ -32,7 +40,7 @@ func (mt *MerkleTree) Pass() {}
 func print(node *Node) {
 	if node != nil {
 		if node.Leaf {
-			fmt.Println(string(node.content))
+			fmt.Printf("%x\n", node.Checksum)
 		}
 		print(node.Left)
 		print(node.Right)
@@ -67,11 +75,30 @@ func initNode(files []string, left, right int) *Node {
 	lchild := initNode(files, left, mid)
 	rchild := initNode(files, mid+1, right)
 	current := &Node{
-		Leaf:     false,
-		Checksum: sha256.Sum256(append(lchild.Checksum[:], rchild.Checksum[:]...)),
-		Left:     lchild,
-		Right:    rchild,
+		Checksum: sha256.Sum256(append(lchild.Checksum[:],
+			rchild.Checksum[:]...)),
+		Left:  lchild,
+		Right: rchild,
 	}
 	lchild.Parent, rchild.Parent = current, current
 	return current
+}
+
+// Compare compares if mt is the same with t.
+func (mt *MerkleTree) Compare(t *MerkleTree, diff []*Node) bool {
+	compare(mt.head, t.head, diff)
+	return len(diff) == 0
+}
+
+func compare(t1, t2 *Node, diff []*Node) {
+	if t1 != nil && t2 != nil {
+		if !t1.Equals(t2) {
+			if t1.Leaf {
+				diff = append(diff, t1)
+			} else {
+				compare(t1.Left, t2.Left, diff)
+				compare(t1.Right, t2.Right, diff)
+			}
+		}
+	}
 }
