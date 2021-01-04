@@ -39,5 +39,8 @@ func (node *Node) Equals(other *Node) bool {
 
 // ShowContent will print the content of node.
 func (node *Node) ShowContent() {
-	fmt.Println(node.content)
+	if !node.Leaf {
+		panic("not a leaf!!!")
+	}
+	fmt.Printf("%s", node.content)
 }

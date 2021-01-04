@@ -10,8 +10,8 @@ package merkletree
 
 import (
 	"crypto/sha256"
-	"fmt"
 	"io/ioutil"
+  "fmt"
 	"path"
 )
 
@@ -31,6 +31,7 @@ func NewMerkleTree(path string) (*MerkleTree, error) {
 
 // Show will print merkle tree to stdout.
 func (mt *MerkleTree) Show() {
+	fmt.Println("show checksum of all leaves...")
 	print(mt.head)
 }
 
@@ -40,7 +41,9 @@ func (mt *MerkleTree) Pass() {}
 func print(node *Node) {
 	if node != nil {
 		if node.Leaf {
-			fmt.Printf("%x\n", node.Checksum)
+			fmt.Printf("content: %s", node.content)
+			fmt.Printf("checksum: %x\n", node.Checksum)
+			fmt.Println("==========================================================================")
 		}
 		print(node.Left)
 		print(node.Right)
@@ -85,20 +88,23 @@ func initNode(files []string, left, right int) *Node {
 }
 
 // Compare compares if mt is the same with t.
-func (mt *MerkleTree) Compare(t *MerkleTree, diff []*Node) bool {
-	compare(mt.head, t.head, diff)
-	return len(diff) == 0
+func (mt *MerkleTree) Compare(t *MerkleTree) (*Node, *Node) {
+	return compare(mt.head, t.head)
 }
 
-func compare(t1, t2 *Node, diff []*Node) {
+func compare(t1, t2 *Node) (*Node, *Node) {
 	if t1 != nil && t2 != nil {
 		if !t1.Equals(t2) {
 			if t1.Leaf {
-				diff = append(diff, t1)
+				return t1, t2
 			} else {
-				compare(t1.Left, t2.Left, diff)
-				compare(t1.Right, t2.Right, diff)
+				td1, td2 := compare(t1.Left, t2.Left)
+				if td1 != nil && td2 != nil {
+					return td1, td2
+				}
+				return compare(t1.Right, t2.Right)
 			}
 		}
 	}
+	return nil, nil
 }
